@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tes API Sistem Pakar Perawatan Kulit</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fc;
+            color: #5a5c69;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        h1, h2 {
+            color: #4e73df;
+        }
+        .endpoint {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fc;
+            border-radius: 5px;
+            border-left: 3px solid #4e73df;
+        }
+        button {
+            background-color: #4e73df;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2e59d9;
+        }
+        pre {
+            background-color: #f8f9fc;
+            padding: 10px;
+            border-radius: 5px;
+            overflow: auto;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #d1d3e2;
+            border-radius: 3px;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 5px 10px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+        .success {
+            background-color: #1cc88a;
+            color: white;
+        }
+        .error {
+            background-color: #e74a3b;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tes API Sistem Pakar Perawatan Kulit</h1>
+        
+        <div class="endpoint">
+            <h2>Informasi API</h2>
+            <p>GET /</p>
+            <button onclick="testEndpoint('/')">Tes</button>
+            <div id="result-info"></div>
+        </div>
+        
+        <div class="endpoint">
+            <h2>Daftar Faktor Resiko</h2>
+            <p>GET /risk_factors</p>
+            <button onclick="testEndpoint('/risk_factors')">Tes</button>
+            <div id="result-risk-factors"></div>
+        </div>
+        
+        <div class="endpoint">
+            <h2>Daftar Gejala</h2>
+            <p>GET /symptoms</p>
+            <button onclick="testEndpoint('/symptoms')">Tes</button>
+            <div id="result-symptoms"></div>
+        </div>
+        
+        <div class="endpoint">
+            <h2>Diagnosis</h2>
+            <p>POST /diagnose</p>
+            <textarea id="diagnosis-input">{
+  "risk_factors": ["FR01", "FR02"],
+  "symptoms": ["G01", "G03"]
+}</textarea>
+            <button onclick="testDiagnosis()">Tes</button>
+            <div id="result-diagnosis"></div>
+        </div>
+        
+        <div class="endpoint">
+            <h2>Status API</h2>
+            <button onclick="checkApiStatus()">Periksa Status API</button>
+            <div id="api-status"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+        
+        async function testEndpoint(endpoint) {
+            const resultId = endpoint === '/' ? 'result-info' : 
+                            endpoint === '/risk_factors' ? 'result-risk-factors' : 'result-symptoms';
+            const resultElement = document.getElementById(resultId);
+            
+            resultElement.innerHTML = '<p>Memuat...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`);
+                const data = await response.json();
+                
+                resultElement.innerHTML = `
+                    <div class="status success">Status: ${response.status} ${response.statusText}</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultElement.innerHTML = `
+                    <div class="status error">Error: ${error.message}</div>
+                    <p>Pastikan API Python berjalan di ${API_BASE_URL}</p>
+                `;
+            }
+        }
+        
+        async function testDiagnosis() {
+            const resultElement = document.getElementById('result-diagnosis');
+            const inputElement = document.getElementById('diagnosis-input');
+            
+            resultElement.innerHTML = '<p>Memuat...</p>';
+            
+            try {
+                const inputData = JSON.parse(inputElement.value);
+                
+                const response = await fetch(`${API_BASE_URL}/diagnose`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(inputData)
+                });
+                
+                const data = await response.json();
+                
+                resultElement.innerHTML = `
+                    <div class="status success">Status: ${response.status} ${response.statusText}</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultElement.innerHTML = `
+                    <div class="status error">Error: ${error.message}</div>
+                    <p>Pastikan API Python berjalan di ${API_BASE_URL} dan input JSON valid</p>
+                `;
+            }
+        }
+        
+        async function checkApiStatus() {
+            const statusElement = document.getElementById('api-status');
+            
+            statusElement.innerHTML = '<p>Memeriksa status API...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/`);
+                const data = await response.json();
+                
+                statusElement.innerHTML = `
+                    <div class="status success">API Aktif</div>
+                    <p>Nama: ${data.name}</p>
+                    <p>Versi: ${data.version}</p>
+                    <p>Endpoint tersedia: ${data.endpoints.length}</p>
+                `;
+            } catch (error) {
+                statusElement.innerHTML = `
+                    <div class="status error">API Tidak Aktif</div>
+                    <p>Error: ${error.message}</p>
+                    <p>Pastikan API Python berjalan di ${API_BASE_URL}</p>
+                `;
+            }
+        }
+        
+        // Check API status on page load
+        window.onload = function() {
+            checkApiStatus();
+        };
+    </script>
+</body>
+</html> 
