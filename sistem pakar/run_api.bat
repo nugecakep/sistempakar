@@ -1,3 +1,0 @@
-@echo off
-echo Starting Python API for Skin Care Expert System...
-python api.py 
